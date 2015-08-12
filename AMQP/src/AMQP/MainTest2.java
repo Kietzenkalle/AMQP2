@@ -26,7 +26,7 @@ public class MainTest2 {
 
 		Server serverB = new Server("ServerB");
 
-		serverB.addNewTrustedCloud("ServerA","192.168.56.1");
+		serverB.addNewTrustedCloud("ServerA",s);
 
 		serverB.addService("Wasserking1");
 
