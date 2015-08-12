@@ -29,7 +29,7 @@ public class Service {
 		return response;
 	}
 	
-	public String responseSubscribe(String)
+	
 	
 	public String getDeviceData(String device) throws Exception{
 		return server.getDeviceData(device, name);
