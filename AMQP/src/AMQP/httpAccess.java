@@ -35,7 +35,7 @@ public class httpAccess {
 	public void setUpstreamExchange(String serverName, String ip) throws MalformedURLException, IOException{
 		setUpstream(serverName, ip);
 		setExchange(serverName);
-		setQueue(serverName);
+		//setQueue(serverName);
 		System.out.println("Exchange von "+serverName+" föderiert!");
 	}
 	

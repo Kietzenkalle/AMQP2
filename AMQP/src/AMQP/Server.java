@@ -3,14 +3,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.rabbitmq.client.AMQP;
+
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.QueueingConsumer;
+
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -23,24 +24,24 @@ public class Server {
 	HashMap<String, String[]> trustedClouds;
 	public HashMap<String,User> users;
 	public HashMap<String,Device> devices;
-	public ArrayList<Service> serviceList;
+	public HashMap<String,Service> serviceList;
 	public HashMap<String, String> responses;
 	private httpAccess webServer;
 	
 	private String exchange="";
 	
 	
+	
 	/**
 	 * Constructor
-	 * @throws IOException 
-	 * @throws TimeoutException 
+	 * @throws Exception 
 	 */
-	public Server(String name) throws IOException, TimeoutException {
+	public Server(String name) throws Exception {
 		SERVER_NAME=name;
 		trustedClouds = new HashMap<String, String[]>(); //cloud-Hashmap + queues
 		users = new HashMap<String,User>();
 		devices= new HashMap<String,Device>();
-		serviceList = new ArrayList<Service>();
+		serviceList = new HashMap<String,Service>();
 		webServer= new httpAccess(SERVER_NAME);
 		
 		ConnectionFactory factory = new ConnectionFactory();
@@ -51,8 +52,11 @@ public class Server {
 	    
 		channel = connection.createChannel();
 		
+		channel.exchangeDeclare("localExchange", "topic");
+		
 		
 		threadExecutor = Executors.newFixedThreadPool(10);
+		//new Help(this,threadExecutor, channel);
 		
 
 	}
@@ -75,12 +79,21 @@ public class Server {
 			
 			webServer.setServerAccess(sName);
 			webServer.setUpstreamExchange(sName, ip);
+			
+			//exchanges / queues für requests /responds
 			channel.queueDeclare(trustedClouds.get(sName)[0], true, false, false, null);
 			channel.queueDeclare(trustedClouds.get(sName)[2], true, false, false, null);
 			channel.exchangeDeclare(SERVER_NAME+"."+sName, "direct");
 			channel.exchangeDeclare(sName+"."+SERVER_NAME, "direct");
-			channel.queueBind(trustedClouds.get(sName)[0],  SERVER_NAME+"."+sName, "");
-			channel.queueBind(trustedClouds.get(sName)[2], sName+"."+SERVER_NAME, "");
+			channel.queueBind(trustedClouds.get(sName)[2], sName+"."+SERVER_NAME, "request");
+			
+			
+			channel.exchangeDeclare("pub"+sName+"."+SERVER_NAME, "topic");
+			channel.exchangeDeclare("pub"+SERVER_NAME+"."+sName, "topic");
+			channel.exchangeBind("pub"+SERVER_NAME+"."+sName, "localExchange", "#."+sName);
+			
+			
+			createWorker(threadExecutor, channel, trustedClouds.get(sName)[2]);
 			System.out.println(sName+ " zu den TrustedClouds hinzugefügt.");
 //				createConsumer(trustedClouds.get(address)[3]);
 //				createProducer(trustedClouds.get(address)[0], trustedClouds.get(address)[1]);
@@ -94,20 +107,11 @@ public class Server {
 			
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	/**
 	 * Sendet Nachricht an angegebene Queue
 	 * @throws IOException 
 	 */
-	void sendMessage(String message, String params, String queue, String from, String to, String target) throws IOException{
+	void sendMessage(String message, String target) throws IOException{
 		HashMap fullMessage = new HashMap();
 		BasicProperties properties = new BasicProperties.Builder()
 				.messageId(java.util.UUID.randomUUID().toString())
@@ -118,8 +122,35 @@ public class Server {
 		fullMessage.put("message", message);
 //		fullMessage.put("params", params);
 		System.out.println(fullMessage.get("message"));
-		channel.basicPublish("", queue, properties, SerializationUtils.serialize(fullMessage));
+//		channel.basicPublish("", queue, properties, SerializationUtils.serialize(fullMessage));
+		channel.basicPublish(SERVER_NAME+"."+target, "response", properties, SerializationUtils.serialize(fullMessage));
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+//	/**
+//	 * Sendet Nachricht an angegebene Queue
+//	 * @throws IOException 
+//	 */
+//	void sendMessage(String message, String params, String queue, String from, String to, String target) throws IOException{
+//		HashMap fullMessage = new HashMap();
+//		BasicProperties properties = new BasicProperties.Builder()
+//				.messageId(java.util.UUID.randomUUID().toString())
+//				.build();
+////		fullMessage.put("sender", from+"@"+SERVER_NAME);
+////		fullMessage.put("receiver", to);
+////		fullMessage.put("type", type);
+//		fullMessage.put("message", message);
+////		fullMessage.put("params", params);
+//		System.out.println(fullMessage.get("message"));
+////		channel.basicPublish("", queue, properties, SerializationUtils.serialize(fullMessage));
+//		channel.basicPublish(SERVER_NAME+"."+target, "response", properties, SerializationUtils.serialize(fullMessage));
+//	}
 //	/**
 //	 * Send Testmessage
 //	 * @throws IOException 
@@ -178,8 +209,14 @@ public class Server {
 	 */
 	String sendRequest(String message, String params, String from, String to, String type, String target) throws Exception{
 		RPCRequester newRequest = new RPCRequester(message, params, from, to, type, target, this, channel);
-		threadExecutor.submit(newRequest);
-		return (String) newRequest.call();
+		Future<String> response = threadExecutor.submit(newRequest);
+		try{
+			return response.get(5, TimeUnit.SECONDS);
+		} catch(TimeoutException e){
+			response.cancel(true);
+			return "TimeOut!";
+		}
+		
 	}
 	
 	
@@ -198,8 +235,10 @@ public class Server {
 //		channel.queueBind( correlId, SERVER_NAME+"."+target, "");
 //		System.out.println("Message: '"+ message+" "+ params+ "' sent from '" + SERVER_NAME +"' to '"+ target +"' over Exchange: "+SERVER_NAME+"."+target+ " queue '"+ correlId);
 //		channel.basicPublish(SERVER_NAME+"."+target, correlId, properties, SerializationUtils.serialize(fullMessage));
-		System.out.println("Message: '"+ message+" "+ params+ "' sent from '" + SERVER_NAME +"' to '"+ target +"' over Exchange: "+SERVER_NAME+"."+target+ " queue '"+ "test");
-		channel.basicPublish(SERVER_NAME+"."+target, "test", properties, SerializationUtils.serialize(fullMessage));
+		System.out.println("Message: '"+ message+" "+ params+ "' sent from '" + fullMessage.get("sender") +"' to '"+ target +"' over Exchange: "+SERVER_NAME+"."+target);
+		channel.basicPublish(SERVER_NAME+"."+target, "response", properties, SerializationUtils.serialize(fullMessage));
+		
+		
 	}
 	
 	
@@ -243,9 +282,18 @@ public class Server {
 	
 	/**
 	 * Add local Service
+	 * @throws IOException 
 	 */
-	public void addService(String serviceName){
-		serviceList.add(new Service(this, serviceName));
+	public void addService(String serviceName) throws IOException{
+		serviceList.put(serviceName,new Service(this, serviceName));
+	}
+	
+	/**
+	 * Add local Service
+	 * @throws IOException 
+	 */
+	public Service getLocalService(String serviceName) throws NullPointerException{
+		return serviceList.get(serviceName);
 	}
 	
 	/**
@@ -268,8 +316,8 @@ public class Server {
 	 */
 	public ArrayList<String> getServices(){
 		ArrayList<String> helplist = new ArrayList<String>();
-		for(Service help : serviceList){
-			helplist.add(help+"@"+SERVER_NAME);
+		for(Map.Entry<String, Service> entry : serviceList.entrySet()){ 
+			helplist.add(entry.getKey()+"@"+SERVER_NAME);
 		}
 		return helplist;
 	}
@@ -313,7 +361,7 @@ public class Server {
 				if (devices.containsKey(dev_Data[0])) {
 					System.out.println(devices.get(dev_Data[0]).listAccess(Integer.valueOf(dev_Data[1])));
 					if (devices.get(dev_Data[0]).setServiceSubscribe(requester, Integer.valueOf(dev_Data[1]))){
-						return "subscribe erfolgreich";
+						return "Subscribe erfolgreich";
 					}
 					else return "Keine Berechtigung für die Daten";
 				}

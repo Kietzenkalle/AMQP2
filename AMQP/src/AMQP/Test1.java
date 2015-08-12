@@ -23,22 +23,34 @@ public class Test1 {
 		serverA.devices.put("device", new Device(serverA, "device", 1,2,3,4,5));
 		serverA.users.put("Alice", new User("Alice", "user1", serverA.devices.get("device")));
 		
-		
+		//Bob vergibt Zugriffsrechte
+		serverA.addServiceAccess(serverA.users.get("Alice"), "Wasserking1@ServerB", 0);
+		serverA.addServiceAccess(serverA.users.get("Alice"), "Stromking2@ServerA", 0);
 		/**
 		 * hier gehts los
 		 */
-		//Bob vergibt Zugriffsrechte	
-		
-		
-		
+			
 		System.out.println("Alle Services von Server A aus abrufen: " + serverA.getAllServices()+"\n");
-		Thread.sleep(lang);
+		
+		
+		
+//		Thread.sleep(lang);
 		//Request Response
 		String requestB = "device#0@ServerB";
-		System.out.println("Stromking1@ServerA fragt einmalig Datum von " + requestB +" von Bob ab. Antwort:" + serverA.getDeviceData(requestB, "Stromking1@ServerA")+"\n");
+		System.out.println("Stromking1@ServerA fragt einmalig Datum von " + requestB +" von Bob ab. Antwort:" + serverA.getLocalService("Stromking1").getDeviceData(requestB));
+//		Thread.sleep(lang);
+		System.out.println("Stromking1 subscribe data from "+ requestB + ": " + serverA.getLocalService("Stromking1").subscribe(requestB));
+		String requestC= "device#0@ServerA";
+		System.out.println("Stromking2 subscribe data from "+ requestC + ": " + serverA.getLocalService("Stromking2").subscribe(requestC));
 		Thread.sleep(lang);
-		
-
+		serverA.users.get("Alice").getDevice().updateData(0);
+		Thread.sleep(kurz);
+		serverA.users.get("Alice").getDevice().updateData(0);
+		Thread.sleep(kurz);
+		serverA.users.get("Alice").getDevice().updateData(0);
+		Thread.sleep(kurz);
+		serverA.users.get("Alice").getDevice().updateData(0);
+		Thread.sleep(kurz);
 	
 	
 	

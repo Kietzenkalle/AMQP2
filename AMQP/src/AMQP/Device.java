@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.rabbitmq.client.AMQP.BasicProperties;
+
+
+
 public class Device {
 		private String name, id;
 		private int[] dataalt;
@@ -166,7 +170,17 @@ public class Device {
 	protected void publish(String id, String data, ArrayList<String> subscriber) throws IOException{
 		for (String one : subscriber){ 
 			String[] split = one.split("@");
-			server.sendPublish(data, "", name+"#"+id, one , "publish", split[1]);
+			HashMap fullMessage = new HashMap();
+			BasicProperties properties = new BasicProperties.Builder()
+					.messageId(java.util.UUID.randomUUID().toString())
+					.build();
+			fullMessage.put("sender", name+"@"+server.SERVER_NAME);
+//			fullMessage.put("receiver", to);
+//			fullMessage.put("type", type);
+			fullMessage.put("message", name+"#"+id+"@"+server.SERVER_NAME+":"+data);
+//			fullMessage.put("params", params);
+			server.channel.basicPublish("localExchange", split[0]+"."+split[1], properties, SerializationUtils.serialize(fullMessage));
+						
 		}
 	}
 	
