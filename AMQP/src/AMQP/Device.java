@@ -111,6 +111,7 @@ public class Device {
 	protected boolean setServiceSubscribe(String name, int i){
 			ArrayList<String> al = (ArrayList<String>) data.get(i).get(1);
 			ArrayList<String> al2 = (ArrayList<String>) data.get(i).get(2);
+			System.out.println(name+" "+al);
 			if (al.contains(name)) {
 				
 				if (!al2.contains(name)){

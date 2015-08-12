@@ -20,13 +20,20 @@ public class Service {
 	}
 	
 	public String subscribe(String devUsrSvr) throws Exception{
-		String response = server.subscribeDeviceData(devUsrSvr, name);
+		String response = server.subscribeDeviceData(devUsrSvr, name+"@"+server.SERVER_NAME);
 		if (response.equals("Subscribe erfolgreich")){
 			String[] dev_Svr = devUsrSvr.split("@");
-			handler.addQueueBind("pub"+dev_Svr[1]+"."+server.SERVER_NAME);
+			if(dev_Svr[1].equals(server.SERVER_NAME)){
+				handler.addQueueBind("localExchange");
+			}
+			else handler.addQueueBind("pub"+dev_Svr[1]+"."+server.SERVER_NAME);
 			
 		}
 		return response;
+	}
+	
+	public String unsubscribe(String devUsrSvr) throws Exception{
+		return server.unsubscribeDeviceData(devUsrSvr, name+"@"+server.SERVER_NAME);
 	}
 	
 	

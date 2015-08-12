@@ -1,18 +1,23 @@
 package AMQP;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.concurrent.TimeoutException;
 
-public class Test1 {
+public class MainTest1 {
 	
 		
 	
 	public static void main(String[] argv) throws TimeoutException, Exception{
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        System.out.print("Enter IP ServerB");
+        String s = br.readLine();
 		int kurz=1000;
 		int lang=5000;
 		
 		//setup Server(clients)
 		Server serverA = new Server("ServerA");
-		serverA.addNewTrustedCloud("ServerB","192.168.56.101");
+		serverA.addNewTrustedCloud("ServerB","s");
 							
 		//setup Services
 		serverA.addService("Stromking1");

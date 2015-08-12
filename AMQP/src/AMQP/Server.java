@@ -211,7 +211,7 @@ public class Server {
 		RPCRequester newRequest = new RPCRequester(message, params, from, to, type, target, this, channel);
 		Future<String> response = threadExecutor.submit(newRequest);
 		try{
-			return response.get(5, TimeUnit.SECONDS);
+			return response.get(1, TimeUnit.SECONDS);
 		} catch(TimeoutException e){
 			response.cancel(true);
 			return "TimeOut!";
@@ -391,9 +391,9 @@ public class Server {
 			try{
 				if (devices.containsKey(dev_Data[0])) {
 					if (devices.get(dev_Data[0]).setServiceUnsubscribe(requester, Integer.valueOf(dev_Data[1]))){
-							return "unsubscribe erfolgreich";
+							return "Unsubscribe erfolgreich";
 					}
-					else return "keine subscribe vorhanden";
+					else return "kein Subscribe vorhanden";
 				}
 				else return "Device nicht vorhanden";
 			}
@@ -401,11 +401,8 @@ public class Server {
 				 }	 
 		}	
 		else {
-				String correlId=sendRequest("unsubscribeDeviceData", device, split[0], "to", "request", dev_Svr[1]);
-				Thread.sleep(1000);
-				String help= responses.get(correlId);
-				responses.remove(correlId);
-				return help;
+				String response=sendRequest("unsubscribeDeviceData", device, split[0], "to", "request", dev_Svr[1]);
+				return response;
 			}
 		return "nix";
 	}
