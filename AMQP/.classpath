@@ -2,8 +2,13 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="C:/Users/Fa/Desktop/ss 15/BA/Arbeit/AMQP/amqp-client-3.5.4.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Fa/Desktop/ss 15/BA/Arbeit/AMQP/amqp-client-3.5.4-javadoc.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Fa/Desktop/ss 15/BA/Arbeit/AMQP/amqp-client-3.5.4.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/C:/Users/Fa/Desktop/ss%2015/BA/Arbeit/AMQP/amqp-client-3.5.4-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.fx.ide.jdt.core.JAVAFX_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Users/Fa/Desktop/jmeter/lib/ext/ApacheJMeter_core.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Fa/Desktop/jmeter/lib/ext/ApacheJMeter_java.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

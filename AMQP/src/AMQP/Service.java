@@ -39,7 +39,7 @@ public class Service {
 	
 	
 	public String getDeviceData(String device) throws Exception{
-		return server.getDeviceData(device, name);
+		return server.getDeviceData(device, name+"@"+server.SERVER_NAME);
 		
 	}
 }

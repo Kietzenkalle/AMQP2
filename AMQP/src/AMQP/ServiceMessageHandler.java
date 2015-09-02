@@ -27,7 +27,7 @@ public class ServiceMessageHandler extends DefaultConsumer {
 
 	public void addQueueBind(String targetExchange) throws IOException{
 		server.channel.queueBind(name, targetExchange, name+"."+server.SERVER_NAME);
-		System.out.println(name+"@"+server.SERVER_NAME+" connected to "+ targetExchange);
+		//System.out.println(name+"@"+server.SERVER_NAME+" connected to "+ targetExchange);
 		
 	}
 	

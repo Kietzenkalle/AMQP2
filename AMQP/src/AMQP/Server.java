@@ -88,6 +88,7 @@ public class Server {
 			channel.queueBind(trustedClouds.get(sName)[2], sName+"."+SERVER_NAME, "request");
 			
 			
+			
 			channel.exchangeDeclare("pub"+sName+"."+SERVER_NAME, "topic");
 			channel.exchangeDeclare("pub"+SERVER_NAME+"."+sName, "topic");
 			channel.exchangeBind("pub"+SERVER_NAME+"."+sName, "localExchange", "#."+sName);
@@ -208,16 +209,23 @@ public class Server {
 	 * @throws Exception 
 	 */
 	String sendRequest(String message, String params, String from, String to, String type, String target) throws Exception{
+//		System.out.println(message+" "+ params+ " "+from+" "+to+" "+type+" "+ target+ " "+ this + " " + channel);
 		RPCRequester newRequest = new RPCRequester(message, params, from, to, type, target, this, channel);
 		Future<String> response = threadExecutor.submit(newRequest);
 		try{
-			return response.get(1, TimeUnit.SECONDS);
+			return response.get(3, TimeUnit.SECONDS);
 		} catch(TimeoutException e){
 			response.cancel(true);
 			return "TimeOut!";
 		}
 		
 	}
+	
+	
+	
+	
+	
+	
 	
 	
 	void sendResponse(String message, String params, String from, String to, String type, String correlId, String target) throws IOException{
@@ -236,7 +244,7 @@ public class Server {
 //		System.out.println("Message: '"+ message+" "+ params+ "' sent from '" + SERVER_NAME +"' to '"+ target +"' over Exchange: "+SERVER_NAME+"."+target+ " queue '"+ correlId);
 //		channel.basicPublish(SERVER_NAME+"."+target, correlId, properties, SerializationUtils.serialize(fullMessage));
 		System.out.println("Message: '"+ message+" "+ params+ "' sent from '" + fullMessage.get("sender") +"' to '"+ target +"' over Exchange: "+SERVER_NAME+"."+target);
-		channel.basicPublish(SERVER_NAME+"."+target, "response", properties, SerializationUtils.serialize(fullMessage));
+		channel.basicPublish(SERVER_NAME+"."+target, correlId, properties, SerializationUtils.serialize(fullMessage));
 		
 		
 	}
@@ -359,7 +367,6 @@ public class Server {
 		
 			try{
 				if (devices.containsKey(dev_Data[0])) {
-					System.out.println(devices.get(dev_Data[0]).listAccess(Integer.valueOf(dev_Data[1])));
 					if (devices.get(dev_Data[0]).setServiceSubscribe(requester, Integer.valueOf(dev_Data[1]))){
 						return "Subscribe erfolgreich";
 					}

@@ -40,11 +40,15 @@ public class RPCRequester implements Callable{
 		fullMessage.put("message", message);
 		fullMessage.put("params", params);
 		channel.basicPublish(server.SERVER_NAME+"."+target, "request", properties, SerializationUtils.serialize(fullMessage));
-		System.out.println("Message: '"+ message+ "' sent from '" + server.SERVER_NAME +"' to '"+ target +"' over exchange: "+server.SERVER_NAME+"."+target);
+//		System.out.println("Message: '"+ message+ "' sent from '" + server.SERVER_NAME +"' to '"+ target +"' over exchange: "+server.SERVER_NAME+"."+target);
 		QueueingConsumer consumer = new QueueingConsumer(channel);
-		replyQueueName = channel.queueDeclare().getQueue();
-		channel.queueBind(replyQueueName, target+"."+server.SERVER_NAME, "response");
-		channel.basicConsume(replyQueueName, false, consumer);
+//		replyQueueName = channel.queueDeclare().getQueue();
+		channel.queueDeclare(correlId, false, true, true, null);
+//		channel.queueBind(replyQueueName, target+"."+server.SERVER_NAME, correlId);
+//		channel.basicConsume(replyQueueName, false, consumer);
+		channel.queueBind(correlId, target+"."+server.SERVER_NAME, correlId);
+		channel.basicConsume(correlId, false, consumer);
+		channel.basicPublish(server.SERVER_NAME+"."+target, "request", properties, SerializationUtils.serialize(fullMessage));
 
 		while (true) {
 			QueueingConsumer.Delivery delivery = consumer.nextDelivery();
@@ -52,7 +56,8 @@ public class RPCRequester implements Callable{
 	        	fullMessage=(HashMap)SerializationUtils.deserialize(delivery.getBody());
 	        	channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
 //	        	server.sendUserResponse(from, message);
-	        	channel.queueUnbind(replyQueueName, target+"."+server.SERVER_NAME, "response");
+	        	channel.queueUnbind(correlId, target+"."+server.SERVER_NAME, correlId);
+	        	channel.queueDelete(correlId);
 	        	return fullMessage.get("message");
 	            
 //	        }
