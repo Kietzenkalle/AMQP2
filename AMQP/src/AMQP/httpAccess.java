@@ -135,11 +135,7 @@ public class httpAccess {
 				    httpCon.getOutputStream());
 				out2.write("{\"pattern\":\""+policyPattern+"\", \"definition\":{\"federation-upstream\":\""+name+"-upstream\"}, \"apply-to\":\"exchanges\"}");
 				out2.close();
-				
-				BufferedReader br = new BufferedReader(new InputStreamReader(httpCon.getInputStream()));
-				String t=null;
-				while((t = br.readLine()) != null) System.out.println(t);
-				br.close();}
+			}
 		/**
 		 * 
 		 * PUT direct queue

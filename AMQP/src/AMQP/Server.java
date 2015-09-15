@@ -75,7 +75,7 @@ public class Server {
 		if (!this.trustedClouds.containsKey(sName)){
 			trustedClouds.put(sName, new String[] {"sr_"+to, "pubsub_"+to, "sr_"+from, "pubsub_"+from});
 			
-			createQueue(trustedClouds.get(sName)[2]);
+			//createQueue(trustedClouds.get(sName)[2]);
 			
 			webServer.setServerAccess(sName);
 			webServer.setUpstreamExchange(sName, ip);
@@ -208,7 +208,9 @@ public class Server {
 	 * Send a Request to the "target"-Cloud
 	 * @throws Exception 
 	 */
-	String sendRequest(String message, String params, String from, String to, String type, String target) throws Exception{
+	//rpc über thread
+	/*
+	String sendRequest1(String message, String params, String from, String to, String type, String target) throws Exception{
 //		System.out.println(message+" "+ params+ " "+from+" "+to+" "+type+" "+ target+ " "+ this + " " + channel);
 		RPCRequester newRequest = new RPCRequester(message, params, from, to, type, target, this, channel);
 		Future<String> response = threadExecutor.submit(newRequest);
@@ -219,7 +221,16 @@ public class Server {
 			return "TimeOut!";
 		}
 		
+	}*/
+	//rpc über normale klasse
+	String sendRequest(String message, String params, String from, String to, String type, String target) throws Exception{
+//		System.out.println(message+" "+ params+ " "+from+" "+to+" "+type+" "+ target+ " "+ this + " " + channel);
+		RPCRequester2 newRequest = new RPCRequester2(message, params, from, to, type, target, this, channel);
+		String response = newRequest.request();
+		return response;
+		
 	}
+	
 	
 	
 	

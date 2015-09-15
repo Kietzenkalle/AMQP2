@@ -39,7 +39,7 @@ public class RPCRequester implements Callable{
 		fullMessage.put("type", type);
 		fullMessage.put("message", message);
 		fullMessage.put("params", params);
-		channel.basicPublish(server.SERVER_NAME+"."+target, "request", properties, SerializationUtils.serialize(fullMessage));
+//		channel.basicPublish(server.SERVER_NAME+"."+target, "request", properties, SerializationUtils.serialize(fullMessage));
 //		System.out.println("Message: '"+ message+ "' sent from '" + server.SERVER_NAME +"' to '"+ target +"' over exchange: "+server.SERVER_NAME+"."+target);
 		QueueingConsumer consumer = new QueueingConsumer(channel);
 //		replyQueueName = channel.queueDeclare().getQueue();
