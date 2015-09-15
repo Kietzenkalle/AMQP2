@@ -22,8 +22,6 @@ import com.rabbitmq.client.Channel;
 
 
 
-
-
 public class MessageHandler implements Runnable {
 
 
@@ -210,7 +208,7 @@ public MessageHandler(byte[] body, BasicProperties properties, long tag, Server 
    	    					
 
    	    					
-
+//fällt raus
    	    case "response":	//System.out.println("RESPONSE " +map.get("message"));
 
    	    					server.responses.put(properties.getCorrelationId(), map.get("message").toString());
