@@ -63,7 +63,7 @@ public class Server {
 		channel.exchangeDeclare("localExchange", "topic");
 		
 		
-		threadExecutor = Executors.newFixedThreadPool(10);
+		threadExecutor = Executors.newFixedThreadPool(4000);
 		
 		
 

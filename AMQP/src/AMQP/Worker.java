@@ -54,6 +54,7 @@ public class Worker extends DefaultConsumer {
                                AMQP.BasicProperties properties,
                                byte[] body) throws IOException {
 
-    	new MessageHandler(body, properties, envelope.getDeliveryTag(), server, channel);
+    	Runnable task = new MessageHandler(body, properties, envelope.getDeliveryTag(), server, channel);
+    	executorService.submit(task);
     }
 }

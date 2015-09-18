@@ -14,7 +14,7 @@ import com.rabbitmq.client.Channel;
  *
  */
 
-public class MessageHandler{
+public class MessageHandler implements Runnable{
 
     Channel chan;
     Worker worker;
@@ -42,8 +42,15 @@ public MessageHandler(byte[] body, BasicProperties properties, long tag, Server 
     	chan=channel;
     	this.properties=properties;
     	this.server = server;
+}
 
 
+
+
+@Override
+public void run() {
+	// TODO Auto-generated method stub
+	
 			try {
 				//acknowledge the channel that the message was received.
 				chan.basicAck(tag, false);
