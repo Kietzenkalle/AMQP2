@@ -1,6 +1,5 @@
 package AMQP;
 
-
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -16,6 +15,7 @@ import com.rabbitmq.client.Envelope;
  * Connects to the local exchange and to others if needed.
  *
  */
+
 public class ServiceMessageHandler extends DefaultConsumer {
 	
 	private String name;

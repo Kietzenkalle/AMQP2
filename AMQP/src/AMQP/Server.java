@@ -1,4 +1,5 @@
 package AMQP;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,8 +22,6 @@ import com.rabbitmq.client.Connection;
  * class to start a new server + main logic
  *
  */
-
-
 
 public class Server {
 	String SERVER_NAME = new String();

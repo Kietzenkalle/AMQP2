@@ -23,7 +23,6 @@ public class RPCRequester {
 	private String replyQueueName;
 	
 	
-	
 	/**
 	 * Set up a new instance.
 	 * @param message type of the request.

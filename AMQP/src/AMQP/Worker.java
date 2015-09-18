@@ -8,12 +8,12 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 
-
 /**
  * @author Fabian Hempel
  * Class that contains a Consumer to empty a given queue.
  *
  */
+
 public class Worker extends DefaultConsumer {
 
     String name;

@@ -57,7 +57,6 @@ public class httpAccess {
 	}
 	
 	
-	
 		/**
 		 * Adds a new user on the broker, that will have access to it.
 		 * @param name name of the cloud = username&password.

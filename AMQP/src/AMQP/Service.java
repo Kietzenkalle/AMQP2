@@ -7,6 +7,7 @@ import java.io.IOException;
  * Class that contains a service and let it get and receive data.
  *
  */
+
 public class Service {
 	private String name;
 	private Server server;

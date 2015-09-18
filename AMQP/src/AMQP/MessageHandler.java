@@ -7,7 +7,6 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 
-
 /**
  * @author Fabian Hempel
  * Handles all requests.
@@ -43,7 +42,6 @@ public MessageHandler(byte[] body, BasicProperties properties, long tag, Server 
     	this.properties=properties;
     	this.server = server;
 }
-
 
 
 

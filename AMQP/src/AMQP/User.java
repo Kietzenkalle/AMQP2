@@ -1,12 +1,11 @@
 package AMQP;
-import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * This class sets up an owner of a device.
  * @author Fa
  *
  */
+
 public class User {
 	
 	private String name;
