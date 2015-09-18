@@ -8,6 +8,12 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 
+
+/**
+ * @author Fabian Hempel
+ * Class that contains a Consumer to empty a given queue.
+ *
+ */
 public class Worker extends DefaultConsumer {
 
     String name;
@@ -18,6 +24,15 @@ public class Worker extends DefaultConsumer {
     ExecutorService executorService;
     Server server;
 
+    
+    /**
+     * Creates a Consumer.
+     * @param server name of the server.
+     * @param threadExecutor threadpool to handle the workers.
+     * @param c channel of the queue.
+     * @param q queue name.
+     * @throws Exception
+     */
     public Worker(Server server, ExecutorService threadExecutor,
                    Channel c, String q) throws Exception {
         super(c);
@@ -30,13 +45,15 @@ public class Worker extends DefaultConsumer {
         
     }
 
+    /**
+     * creates a new MessageHandler when a message is received
+     */
     @Override
     public void handleDelivery(String consumerTag,
                                Envelope envelope,
                                AMQP.BasicProperties properties,
                                byte[] body) throws IOException {
-    //    Runnable task = new MessageHandler(this, channel, body);
-    	Runnable task = new MessageHandler(body, properties, envelope.getDeliveryTag(), server, channel);
-    	executorService.submit(task);
+
+    	new MessageHandler(body, properties, envelope.getDeliveryTag(), server, channel);
     }
 }

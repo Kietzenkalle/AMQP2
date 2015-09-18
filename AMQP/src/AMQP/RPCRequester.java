@@ -5,10 +5,17 @@ import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.ShutdownSignalException;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConsumerCancelledException;
 
-public class RPCRequester implements Callable{
+/**
+ * @author Fabian Hempel
+ * Sets up an request and waits for the corresponding respond.
+ *
+ */
+public class RPCRequester {
 
 	private String message, params, from, to, type, target;
 	private Server server;
@@ -16,6 +23,18 @@ public class RPCRequester implements Callable{
 	private String replyQueueName;
 	
 	
+	
+	/**
+	 * Set up a new instance.
+	 * @param message type of the request.
+	 * @param params optional parameters for the request.
+	 * @param from sender of the request.
+	 * @param to receiver of the request.
+	 * @param type type of the message, in this case "request".
+	 * @param target queue to put the message in.
+	 * @param server local server.
+	 * @param channel channel to be used.
+	 */
 	public RPCRequester(String message, String params, String from, String to, String type, String target, Server server, Channel channel){
 		this.message=message;
 		this.params=params;
@@ -27,10 +46,23 @@ public class RPCRequester implements Callable{
 		this.channel=channel;
 	}
 	
-	@Override
-	public Object call() throws Exception {
+	/**
+	 * Send the request and wait for the response.
+	 * @return String with the response.
+	 * @throws IOException
+	 * @throws ShutdownSignalException
+	 * @throws ConsumerCancelledException
+	 * @throws InterruptedException
+	 */
+	public String request() throws IOException, ShutdownSignalException, ConsumerCancelledException, InterruptedException{
+		//create a unique queue where the response is send to
+		QueueingConsumer consumer = new QueueingConsumer(channel);
+		String correlId=channel.queueDeclare().getQueue();
+		channel.queueBind(correlId, target+"."+server.SERVER_NAME, correlId);
+		channel.basicConsume(correlId, false, consumer);
+		
+		//create the message body & send the request
 		HashMap fullMessage = new HashMap();
-		String correlId= java.util.UUID.randomUUID().toString();
 		BasicProperties properties = new BasicProperties.Builder().
 				correlationId(correlId).type(type).replyTo(server.trustedClouds.get(target)[2])
 				.build();
@@ -39,28 +71,20 @@ public class RPCRequester implements Callable{
 		fullMessage.put("type", type);
 		fullMessage.put("message", message);
 		fullMessage.put("params", params);
-//		channel.basicPublish(server.SERVER_NAME+"."+target, "request", properties, SerializationUtils.serialize(fullMessage));
-//		System.out.println("Message: '"+ message+ "' sent from '" + server.SERVER_NAME +"' to '"+ target +"' over exchange: "+server.SERVER_NAME+"."+target);
-		QueueingConsumer consumer = new QueueingConsumer(channel);
-//		replyQueueName = channel.queueDeclare().getQueue();
-		channel.queueDeclare(correlId, false, true, true, null);
-//		channel.queueBind(replyQueueName, target+"."+server.SERVER_NAME, correlId);
-//		channel.basicConsume(replyQueueName, false, consumer);
-		channel.queueBind(correlId, target+"."+server.SERVER_NAME, correlId);
-		channel.basicConsume(correlId, false, consumer);
 		channel.basicPublish(server.SERVER_NAME+"."+target, "request", properties, SerializationUtils.serialize(fullMessage));
 
+		//wait for the response and return it, delete the queues
 		while (true) {
 			QueueingConsumer.Delivery delivery = consumer.nextDelivery();
-//				        if (delivery.getProperties().getCorrelationId().equals(correlId)) {
+			        
 	        	fullMessage=(HashMap)SerializationUtils.deserialize(delivery.getBody());
 	        	channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-//	        	server.sendUserResponse(from, message);
+        	
 	        	channel.queueUnbind(correlId, target+"."+server.SERVER_NAME, correlId);
 	        	channel.queueDelete(correlId);
-	        	return fullMessage.get("message");
+	        	return (String) fullMessage.get("message");
 	            
-//	        }
+
 		}
 		
 	}

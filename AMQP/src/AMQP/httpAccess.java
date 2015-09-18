@@ -10,41 +10,59 @@ import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 
+/**
+ * @author Fabian Hempel
+ * This class sets all required properties on the broker to make federation possible.
+ *
+ */
+
 public class httpAccess {
 	private String adminName = "guest";
 	private String adminPw = "guest";
 	private String serverName;
 	
+	
+	/**
+	 * Set up an instance.
+	 * @param name name of the server.
+	 */
 	public httpAccess(String name){
 		serverName=name;
 	}
 	
 	
 	/**
-	 * add friendly Server as a User to the RabbitMQ Server
-	 * @param serverName
+	 * Create a new user on the broker.
+	 * @param serverName name of the new cloud. = username & password
 	 * @throws IOException
 	 */
-	
 	public void setServerAccess(String serverName) throws IOException{
 		addServerUser(serverName);
 		setServerPermissions(serverName);
 		System.out.println("User: "+serverName+" Pw: "+serverName + " added at local RabbitMQ Server");
 	}
 	
+	
+	/**
+	 * Set an upstream and set federation rules for wanted exchanges.
+	 * @param serverName name of the cloud.
+	 * @param ip ip of the cloud.
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
 	public void setUpstreamExchange(String serverName, String ip) throws MalformedURLException, IOException{
 		setUpstream(serverName, ip);
 		setExchange(serverName);
-		//setQueue(serverName);
 		System.out.println("Exchange von "+serverName+" föderiert!");
 	}
 	
 	
 	
 		/**
-		* PUT new Server/User läuft
-		 * @throws IOException 
-		*/
+		 * Adds a new user on the broker, that will have access to it.
+		 * @param name name of the cloud = username&password.
+		 * @throws IOException
+		 */
 	private void addServerUser(String name) throws IOException{
 		URL url = new URL("http://localhost:15672/api/users/"+name);
 		HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
@@ -68,9 +86,10 @@ public class httpAccess {
 	}	
 	
 		/**
-		 * 
-		 * PUT User Access
-		 * @throws MalformedURLException, IOException 
+		 * Set the permissions of the created user on this broker.
+		 * @param name name of the cloud.
+		 * @throws MalformedURLException
+		 * @throws IOException
 		 */
 	private void setServerPermissions(String name) throws MalformedURLException, IOException{
 		URL url = new URL("http://localhost:15672/api/permissions/%2f/"+name); //%2f=standardvirtualhost \
@@ -91,9 +110,11 @@ public class httpAccess {
 	
 	
 	/**
-	 * 
-	 * PUT new Upstream from target Server
-	 * @throws MalformedURLException, IOException 
+	 * Connect local broker to the broker of the new cloud.
+	 * @param name name of the cloud.
+	 * @param ip ip of the cloud.
+	 * @throws MalformedURLException
+	 * @throws IOException
 	 */
 	private void setUpstream(String name, String ip) throws MalformedURLException, IOException{
 		URL url = new URL("http://localhost:15672/api/parameters/federation-upstream/%2f/"+name+"-upstream"); //%2f=standardvirtualhost \
@@ -114,9 +135,10 @@ public class httpAccess {
 		
 
 		/**
-		 * 
-		 * PUT new Policy what Exchange to get federated
-		 * @throws MalformedURLException, IOException 
+		 * Sets the format of the exchanges that should be federated from the new cloud.
+		 * @param name name of the cloud.
+		 * @throws MalformedURLException
+		 * @throws IOException
 		 */
 		private void setExchange(String name) throws MalformedURLException, IOException{
 			String policyName=name+"to"+serverName;
@@ -135,34 +157,11 @@ public class httpAccess {
 				    httpCon.getOutputStream());
 				out2.write("{\"pattern\":\""+policyPattern+"\", \"definition\":{\"federation-upstream\":\""+name+"-upstream\"}, \"apply-to\":\"exchanges\"}");
 				out2.close();
-			}
-		/**
-		 * 
-		 * PUT direct queue
-		 * @throws MalformedURLException, IOException 
-		 */
-		private void setQueue(String name) throws MalformedURLException, IOException{
-			String policyName=name+"to"+serverName;
-			String policyPattern=name+"|"+serverName;
-			Authenticator.setDefault (new Authenticator() {
-			    protected PasswordAuthentication getPasswordAuthentication() {
-			        return new PasswordAuthentication ("guest", "guest".toCharArray());
-			    }
-			});
-				URL url = new URL("http://localhost:15672/api/policies/%2f/"+policyName+"Queue"); //%2f=standardvirtualhost \
-				HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
-				httpCon.setDoOutput(true);
-				httpCon.setRequestMethod("PUT");
-				httpCon.setRequestProperty("Content-Type", "application/json");
-				OutputStreamWriter out2 = new OutputStreamWriter(
-				    httpCon.getOutputStream());
-				out2.write("{\"pattern\":\"^"+policyPattern+"\", \"definition\":{\"federation-upstream\":\""+name+"-upstream\"}, \"apply-to\":\"queues\"}");
-				out2.close();
 				
 				BufferedReader br = new BufferedReader(new InputStreamReader(httpCon.getInputStream()));
 				String t=null;
 				while((t = br.readLine()) != null) System.out.println(t);
 				br.close();}
-	
+			
 	
 }

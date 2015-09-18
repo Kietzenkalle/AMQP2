@@ -16,6 +16,14 @@ import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
+/**
+ * @author Fabian Hempel
+ * class to start a new server + main logic
+ *
+ */
+
+
+
 public class Server {
 	String SERVER_NAME = new String();
 	
@@ -28,13 +36,13 @@ public class Server {
 	public HashMap<String, String> responses;
 	private httpAccess webServer;
 	
-	private String exchange="";
-	
-	
+		
 	
 	/**
-	 * Constructor
-	 * @throws Exception 
+	 *  
+	 * Start a new server.
+	 * @param name Name of the server.
+	 * @throws Exception
 	 */
 	public Server(String name) throws Exception {
 		SERVER_NAME=name;
@@ -56,15 +64,17 @@ public class Server {
 		
 		
 		threadExecutor = Executors.newFixedThreadPool(10);
-		//new Help(this,threadExecutor, channel);
+		
 		
 
 	}
 	
 	
 	/**
-	 * Add a Trusted Cloud, build corresponding queues
-	 * @return 
+	 * Add a trusted cloud, build corresponding exchanges and queues.
+	 * @param sName Name of the cloud.
+	 * @param ip IP of the cloud.
+	 *  
 	 */
 	@SuppressWarnings("deprecation")
 	public void addNewTrustedCloud(String sName, String ip) throws TimeoutException, Exception{
@@ -108,124 +118,21 @@ public class Server {
 			
 	}
 	
-	/**
-	 * Sendet Nachricht an angegebene Queue
-	 * @throws IOException 
-	 */
-	void sendMessage(String message, String target) throws IOException{
-		HashMap fullMessage = new HashMap();
-		BasicProperties properties = new BasicProperties.Builder()
-				.messageId(java.util.UUID.randomUUID().toString())
-				.build();
-//		fullMessage.put("sender", from+"@"+SERVER_NAME);
-//		fullMessage.put("receiver", to);
-//		fullMessage.put("type", type);
-		fullMessage.put("message", message);
-//		fullMessage.put("params", params);
-		System.out.println(fullMessage.get("message"));
-//		channel.basicPublish("", queue, properties, SerializationUtils.serialize(fullMessage));
-		channel.basicPublish(SERVER_NAME+"."+target, "response", properties, SerializationUtils.serialize(fullMessage));
-	}
 	
-	
-	
-	
-	
-	
-	
-	
-//	/**
-//	 * Sendet Nachricht an angegebene Queue
-//	 * @throws IOException 
-//	 */
-//	void sendMessage(String message, String params, String queue, String from, String to, String target) throws IOException{
-//		HashMap fullMessage = new HashMap();
-//		BasicProperties properties = new BasicProperties.Builder()
-//				.messageId(java.util.UUID.randomUUID().toString())
-//				.build();
-////		fullMessage.put("sender", from+"@"+SERVER_NAME);
-////		fullMessage.put("receiver", to);
-////		fullMessage.put("type", type);
-//		fullMessage.put("message", message);
-////		fullMessage.put("params", params);
-//		System.out.println(fullMessage.get("message"));
-////		channel.basicPublish("", queue, properties, SerializationUtils.serialize(fullMessage));
-//		channel.basicPublish(SERVER_NAME+"."+target, "response", properties, SerializationUtils.serialize(fullMessage));
-//	}
-//	/**
-//	 * Send Testmessage
-//	 * @throws IOException 
-//	 */
-//	void sendMessage(String message) throws IOException{
-//		HashMap fullMessage = new HashMap();
-//		BasicProperties properties = new BasicProperties.Builder()
-//				.messageId(java.util.UUID.randomUUID().toString())
-//				.build();
-////		fullMessage.put("sender", from+"@"+SERVER_NAME);
-////		fullMessage.put("receiver", to);
-////		fullMessage.put("type", type);
-//		fullMessage.put("message", message);
-////		fullMessage.put("params", params);
-//		System.out.println(fullMessage.get("message"));
-//		channel.basicPublish("", queue, properties, SerializationUtils.serialize(fullMessage));
-//	}
-	
-//	/**
-//	 * Send a Request to the "target"-Cloud
-//	 * @throws Exception 
-//	 */
-//	String sendRequest1(String message, String params, String from, String to, String type, String target) throws Exception{
-//		HashMap fullMessage = new HashMap();
-//		String correlId= java.util.UUID.randomUUID().toString();
-//		BasicProperties properties = new BasicProperties.Builder().
-//				correlationId(correlId).type(type).replyTo(trustedClouds.get(target)[2])
-//				.build();
-//		fullMessage.put("sender", from+"@"+SERVER_NAME);
-//		fullMessage.put("receiver", to);
-//		fullMessage.put("type", type);
-//		fullMessage.put("message", message);
-//		fullMessage.put("params", params);
-//		channel.queueDeclare(correlId, false, false, false, null);
-//		channel.queueBind(correlId, target+"."+SERVER_NAME, "");
-//		
-//		channel.basicPublish("", trustedClouds.get(target)[0], properties, SerializationUtils.serialize(fullMessage));
-//		System.out.println("Message: '"+ message+ "' sent from '" + SERVER_NAME +"' to '"+ target +"' over queue '" + trustedClouds.get(target)[0]);
-//		QueueingConsumer consumer = new QueueingConsumer(channel);
-//		channel.basicConsume(correlId, false, consumer);
-//		System.out.println("Listening at Exchange: "+ target+"."+SERVER_NAME +" queue: "+correlId );
-//		
-//		while (true) {
-//	        QueueingConsumer.Delivery delivery = consumer.nextDelivery();
-//	        if (delivery.getProperties().getCorrelationId().equals(correlId)) {
-//	        	fullMessage=(HashMap)SerializationUtils.deserialize(delivery.getBody());
-//	        	channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-//	            return (String) fullMessage.get("message");
-//	        }
-//		}
-//	}
 	
 	/**
-	 * Send a Request to the "target"-Cloud
-	 * @throws Exception 
+	 * Create a new Requester for Request/Respond.
+	 * @param message type of the Request.
+	 * @param params optional parameter, e.g. the name of the device for an getDeviceData-Request.
+	 * @param from sender of the message.
+	 * @param to receiver of the message.
+	 * @param type type of the message to put in queue, mostly "request".
+	 * @param target queue to put the message in.
+	 * @return returns the 
+	 * @throws String with the respond.
 	 */
-	//rpc über thread
-	/*
-	String sendRequest1(String message, String params, String from, String to, String type, String target) throws Exception{
-//		System.out.println(message+" "+ params+ " "+from+" "+to+" "+type+" "+ target+ " "+ this + " " + channel);
-		RPCRequester newRequest = new RPCRequester(message, params, from, to, type, target, this, channel);
-		Future<String> response = threadExecutor.submit(newRequest);
-		try{
-			return response.get(3, TimeUnit.SECONDS);
-		} catch(TimeoutException e){
-			response.cancel(true);
-			return "TimeOut!";
-		}
-		
-	}*/
-	//rpc über normale klasse
 	String sendRequest(String message, String params, String from, String to, String type, String target) throws Exception{
-//		System.out.println(message+" "+ params+ " "+from+" "+to+" "+type+" "+ target+ " "+ this + " " + channel);
-		RPCRequester2 newRequest = new RPCRequester2(message, params, from, to, type, target, this, channel);
+		RPCRequester newRequest = new RPCRequester(message, params, from, to, type, target, this, channel);
 		String response = newRequest.request();
 		return response;
 		
@@ -238,7 +145,17 @@ public class Server {
 	
 	
 	
-	
+	/**
+	 * Sends the respond to a related request.
+	 * @param message content of the response.
+	 * @param params optional parameters for the response.
+	 * @param from sender of the response.
+	 * @param to receiver of the response.
+	 * @param type type of the message, in this case "response"
+	 * @param correlId correlated ID to assign the response to the right request.
+	 * @param target queue to put the response in.
+	 * @throws IOException
+	 */
 	void sendResponse(String message, String params, String from, String to, String type, String correlId, String target) throws IOException{
 		HashMap fullMessage = new HashMap();
 		BasicProperties properties = new BasicProperties.Builder()
@@ -262,7 +179,14 @@ public class Server {
 	
 	
 	/**
-	 * Send Publish
+	 * Sends a publish message.
+	 * @param message content of the message.
+	 * @param params optional parameters.
+	 * @param from sender of the publish message.
+	 * @param to receiver of the publish message.
+	 * @param type type of the message, in this case "publish"
+	 * @param target queue to put the message in.
+	 * @throws IOException
 	 */
 	void sendPublish(String message, String params, String from, String to, String type,  String target) throws IOException{
 		HashMap fullMessage = new HashMap();
@@ -280,44 +204,41 @@ public class Server {
 	}
 	
 	
+
 	/**
-	 * erstellt Queue
-	 * @throws Exception 
-	 */
-	void createQueue(String queueName) throws Exception{
-		System.out.println(queueName);
-		channel.queueDeclare(queueName, true, false, false, null);
-		createWorker(threadExecutor, channel, queueName);
-		
-	}
-	/**
-	 * erstellt Queue
-	 * @throws Exception 
-	 * @throws IOException 
+	 * Creates a consumer to receive message at the corresponding queue.
+	 * @param threadExecutor threadexecutor that handles the worker.
+	 * @param chan channel where the queue is.
+	 * @param queue name of the queue to observe.
+	 * @throws Exception
 	 */
 	void createWorker(ExecutorService threadExecutor, Channel chan, String queue) throws Exception{
 	new Worker(this, threadExecutor, chan, queue);
 	}
 	
 	/**
-	 * Add local Service
-	 * @throws IOException 
+	 * Create a local service and put it in the service list.
+	 * @param serviceName name of the service.
+	 * @throws IOException
 	 */
 	public void addService(String serviceName) throws IOException{
 		serviceList.put(serviceName,new Service(this, serviceName));
 	}
 	
 	/**
-	 * Add local Service
-	 * @throws IOException 
+	 * Returns a local service by name.
+	 * @param serviceName name of the service.
+	 * @return Service instance
+	 * @throws NullPointerException
 	 */
 	public Service getLocalService(String serviceName) throws NullPointerException{
 		return serviceList.get(serviceName);
 	}
 	
 	/**
-	 * Request Services from all trusted Clouds
-	 * @throws Exception 
+	 * Get all services, locals and from trusted clouds.
+	 * @return String with all available services.
+	 * @throws Exception
 	 */
 	public String getAllServices() throws Exception{
 		ArrayList<String> allServices = getServices();
@@ -331,7 +252,8 @@ public class Server {
 	
 	
 	/**
-	 * Local Services
+	 * Get all local services in a list.
+	 * @return ArrayList<String> of services
 	 */
 	public ArrayList<String> getServices(){
 		ArrayList<String> helplist = new ArrayList<String>();
@@ -341,6 +263,13 @@ public class Server {
 		return helplist;
 	}
 	
+	/**
+	 * Get the data of a device.
+	 * @param device targeted device, has to be like "name#dataid@targetserver".
+	 * @param requester origin of the request, has to be like "requestername@requesterserver".
+	 * @return String of the data.
+	 * @throws Exception
+	 */
 	String getDeviceData (String device, String requester) throws Exception{
 		String[] dev_Svr = device.split("@");
 		String[] dev_Data = dev_Svr[0].split("#");
@@ -367,8 +296,11 @@ public class Server {
 	
 	
 	/**
-	 * subscribe Data
-	 * @throws Exception 
+	 * Subscribe device data.
+	 * @param device targeted device, has to be like "name#dataid@targetserver".
+	 * @param requester origin of the request, has to be like "requestername@requesterserver".
+	 * @return String with the respond to the subscribe request.
+	 * @throws Exception
 	 */
 	public String subscribeDeviceData (String device, String requester) throws Exception{
 		String[] dev_Svr = device.split("@");
@@ -397,8 +329,11 @@ public class Server {
 	
 	
 	/**
-	 * unsubscribe Data
-	 * @throws Exception 
+	 * Unsubscribe device data.
+	 * @param device targeted device, has to be like "name#dataid@targetserver".
+	 * @param requester origin of the request, has to be like "requestername@requesterserver".
+	 * @return String with the respond to the subscribe request.
+	 * @throws Exception
 	 */
 	public String unsubscribeDeviceData(String device, String requester) throws Exception{
 		String[] dev_Svr = device.split("@");
@@ -426,7 +361,10 @@ public class Server {
 	}
 	
 	/**
-	 * Zugriffsberechtigung setzen
+	 * Set service access to on or more device datas.
+	 * @param user user of the device.
+	 * @param service servicename to allow access.
+	 * @param dataIndex one ore more data indexes.
 	 */
 	public void addServiceAccess(User user, String service, int ...dataIndex){
 		for (int j : dataIndex){
@@ -435,7 +373,10 @@ public class Server {
 	}
 	
 	/**
-	 * Zugriffsberechtigungen entziehen
+	 * Remove the access to on or more device datas.
+	 * @param user owner of the device.
+	 * @param service servicename to allow access.
+	 * @param dataIndex one ore more data indexes.
 	 */
 	public void removeServiceAccess(User user, String service, int ...dataIndex){
 		
@@ -445,16 +386,14 @@ public class Server {
 	}
 	
 	/**
-	 * Get followers
+	 * Get a HashMap of all services that currently subscribe device data.
+	 * @param user owner of the device.
+	 * @return HashMap with data index and current subscribers.
 	 */
 	protected HashMap<String, String> discoverFollowers(User user){
 		return user.getDevice().listFollower();
 	}
 	
-	/**
-	 * send user response 
-	 */
-	protected void sendUserResponse(String user, String message){
-	}
+	
 	
 }

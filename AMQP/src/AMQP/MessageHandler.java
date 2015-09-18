@@ -1,90 +1,51 @@
 package AMQP;
 
-
-
 import java.io.IOException;
-
 import java.util.ArrayList;
-
 import java.util.HashMap;
-
-import java.util.Map;
-
-
-
 import com.rabbitmq.client.AMQP;
-
 import com.rabbitmq.client.AMQP.BasicProperties;
-
-
-
 import com.rabbitmq.client.Channel;
 
 
+/**
+ * @author Fabian Hempel
+ * Handles all requests.
+ *
+ */
 
-public class MessageHandler implements Runnable {
-
-
-
-    
-
-    
+public class MessageHandler{
 
     Channel chan;
-
     Worker worker;
-
     AMQP.BasicProperties properties;
-
     byte[] message;
-
     long tag;
-
     Server server;
-    
     String[] split;
 
-    
-    
-
+        
+/**
+ * Sets up a new MessageHandler.
+ * @param body unserialised messagebody.
+ * @param properties AMQP-Properties of the message.
+ * @param tag tag of the message to acknowledge its consumption.
+ * @param server name of the local server.
+ * @param channel corresponding channel.
+ */
 public MessageHandler(byte[] body, BasicProperties properties, long tag, Server server, Channel channel) {
 
 		
 
     	message=body;
-
     	this.tag=tag;
-
     	chan=channel;
-
     	this.properties=properties;
-
     	this.server = server;
 
-	}
-
-
-
-//    public MessageHandler(Worker worker2, Channel c, byte[] body) {
-
-//		
-
-//    	worker = worker2;
-
-//        chan = c;
-
-//        message=body;
-
-//	}
-
-
-
-
-
-	public void run() {
 
 			try {
-
+				//acknowledge the channel that the message was received.
 				chan.basicAck(tag, false);
 
 			} catch (IOException e) {
@@ -95,10 +56,8 @@ public MessageHandler(byte[] body, BasicProperties properties, long tag, Server 
 
 			}
 
+			//deserialize the messagebody
             HashMap map = (HashMap)SerializationUtils.deserialize(message);
-
-            System.out.println("Message erhalten: "+ map.get("message"));
-
             split = map.get("sender").toString().split("@");
 
 			
@@ -110,20 +69,13 @@ public MessageHandler(byte[] body, BasicProperties properties, long tag, Server 
    	     switch (properties.getType()){
 
    	     case "request": 	
-
    	    	switch(map.get("message").toString()){
-
    	    		case "getServices":
-
    	    							{ ArrayList help = server.getServices();
-
-   	    							
-
+				
    	    							try {
 
 										server.sendResponse(help.toString(),"", server.SERVER_NAME, map.get("sender").toString(), "response", properties.getCorrelationId(), split[1]);
-
-										
 
 									} catch (IOException e) {
 
@@ -138,7 +90,6 @@ public MessageHandler(byte[] body, BasicProperties properties, long tag, Server 
    	    		case "getDeviceData":	
 
    									try {
-   										System.out.println(map);
    										server.sendResponse(server.getDeviceData(map.get("params").toString(), map.get("sender").toString()),"", server.SERVER_NAME , map.get("sender").toString(), "response", properties.getCorrelationId(), split[1]);
 
    									} catch (Exception e) { System.out.println("wtf");
@@ -199,34 +150,7 @@ public MessageHandler(byte[] body, BasicProperties properties, long tag, Server 
 
    	    	}		
 
-   	    					
-
-   	    					
-
-   	    					
-
-   	    					
-
-   	    					
-//fällt raus
-   	    case "response":	//System.out.println("RESPONSE " +map.get("message"));
-
-   	    					server.responses.put(properties.getCorrelationId(), map.get("message").toString());
-
-   	    					break;
-
-   	    case "publish":   	System.out.println("Publish von "+ map.get("sender")+ "an " + map.get("receiver") + " data:"+ map.get("message"));
-
-   	    					break;
-
-   	    case "unsubscribe": 
-
-   	    					break;
-
-   	    case "services"   :
-
-   	    					break;
-
+  
    	    default:			
 
    	    					break;

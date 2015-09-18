@@ -10,12 +10,23 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 
+/**
+ * @author Fabian Hempel
+ * This class handles the creation of needed queues for an service to receive subscribed data.
+ * Connects to the local exchange and to others if needed.
+ *
+ */
 public class ServiceMessageHandler extends DefaultConsumer {
 	
 	private String name;
 	private Server server;
 	
-	
+	/**
+	 * Sets up the service message handler. Binds a queue to the local exchange.
+	 * @param name name of the service.
+	 * @param server name of the server.
+	 * @throws IOException
+	 */
 	public ServiceMessageHandler(String name, Server server) throws IOException {
 		super(server.channel);
 		this.name=name;
@@ -25,14 +36,23 @@ public class ServiceMessageHandler extends DefaultConsumer {
 		server.channel.basicConsume(name, false, this);
 	}
 
+	/**
+	 * Connects the queue to a publish/subscribe exchange.
+	 * @param targetExchange name of the exchange.
+	 * @throws IOException
+	 */
 	public void addQueueBind(String targetExchange) throws IOException{
 		server.channel.queueBind(name, targetExchange, name+"."+server.SERVER_NAME);
 		//System.out.println(name+"@"+server.SERVER_NAME+" connected to "+ targetExchange);
 		
 	}
 	
+	
+	/**
+	 * Prints out the message if a publish-message is received.
+	 */
 	 @Override
-	    public void handleDelivery(String consumerTag,
+	     public void handleDelivery(String consumerTag,
 	                               Envelope envelope,
 	                               AMQP.BasicProperties properties,
 	                               byte[] body) throws IOException {

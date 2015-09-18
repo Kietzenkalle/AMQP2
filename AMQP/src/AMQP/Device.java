@@ -8,7 +8,11 @@ import java.util.Map;
 
 import com.rabbitmq.client.AMQP.BasicProperties;
 
-
+/**
+ * @author Fabian Hempel
+ * set up a new device, contains all data, access lists
+ *
+ */
 
 public class Device {
 		private String name, id;
@@ -18,7 +22,10 @@ public class Device {
 	
 	
 		/**
-		 * Konstruktor
+		 * Creates a new Device.
+		 * @param server name of the local server.
+		 * @param name name of the device.
+		 * @param datas one ore more datas.
 		 */
 	public Device(Server server, String name, double ...datas){
 		this.name=name;
@@ -31,7 +38,8 @@ public class Device {
 	}
 	
 	/**
-	 * zusätzliches Datum hinzufügen
+	 * Add a new data row.
+	 * @param singleData data value.
 	 */
 	protected void addData(double singleData){
 		int help=data.size();
@@ -42,7 +50,8 @@ public class Device {
 	}
 	
 	/**
-	 * zusätzliche DatEN hinzufügen
+	 * Adds multiple new data rows.
+	 * @param moreData one ore more data values.
 	 */
 	protected void addData(double ...moreData){
 		for (double i : moreData){
@@ -51,7 +60,9 @@ public class Device {
 	}
 	
 	/**
-	 * einzelnes Datum um eins erhöhen und publishen falls Subscriber vorhanden
+	 * Increase a single data value, publish it if it has subscribers.
+	 * @param i index of the data.
+	 * @throws IOException
 	 */
 	protected void updateData(int i) throws IOException{
 		double help=(double) data.get(i).get(0);
@@ -63,7 +74,10 @@ public class Device {
 	}
 	
 	/**
-	 * einzelnes Datum ändern und publishen falls Subscriber vorhanden
+	 * Update a single data value, publish it if it hast subscribers.
+	 * @param i index of the data.
+	 * @param j new value.
+	 * @throws IOException
 	 */
 	protected void updateData(int i, double j) throws IOException{
 		data.get(i).set(0, j);
@@ -74,7 +88,10 @@ public class Device {
 	}
 	
 	/**
-	 * übergebenem Service Zugriff auf Datum an index i erlauben
+	 * Set service access for given service to data at specified index.
+	 * @param service name of the service.
+	 * @param i index of the data.
+	 * @return
 	 */
 	protected boolean setServiceAccess(String service, int i ){
 		ArrayList<String> al = (ArrayList<String>) data.get(i).get(1);
@@ -87,17 +104,22 @@ public class Device {
 	}
 	
 	/**
-	 * Zugriff entziehen
+	 * Remove the service access.
+	 * @param name name of the service.
+	 * @param i index of the data.
 	 */
 	protected void removeServiceAccess(String name, int i){
 			ArrayList<String> al = (ArrayList<String>) data.get(i).get(1);
 			ArrayList<String> al2 = (ArrayList<String>) data.get(i).get(2);
-			if (!al.contains(name)) al.remove(name);
-			if (!al2.contains(name)) al2.remove(name);
+			if (al.contains(name)) al.remove(name);
+			if (al2.contains(name)) al2.remove(name);
 	}
 	
 	/**
-	 * check ob Zugriff besteht
+	 * Check if a service has access to the data.
+	 * @param name name of the service.
+	 * @param i index of the data.
+	 * @return Boolean for the access state.
 	 */
 	protected boolean hasAccess(String name, int i){
 		ArrayList<String> al = (ArrayList<String>) data.get(i).get(1);
@@ -106,7 +128,10 @@ public class Device {
 	}
 	
 	/**
-	 * service subscriben wenn berechtigt
+	 * Sets a subscription.
+	 * @param name name of the service
+	 * @param i index of the data.
+	 * @return Boolean, if subscription was successfull.
 	 */
 	protected boolean setServiceSubscribe(String name, int i){
 			ArrayList<String> al = (ArrayList<String>) data.get(i).get(1);
@@ -123,7 +148,10 @@ public class Device {
 	}
 	
 	/**
-	 * unsuscribe
+	 * Remove a subscription.
+	 * @param name name of the service.
+	 * @param i index of the data.
+	 * @return Boolean, if the unsubscribe was successfull.
 	 */
 	protected boolean setServiceUnsubscribe(String name, int i){
 		
@@ -137,7 +165,8 @@ public class Device {
 	}
 	
 	/**
-	 * Subscriber auflisten
+	 * List all followers of this device.
+	 * @return HashMap with all followers.
 	 */
 	protected HashMap<String, String> listFollower(){
 		HashMap<String, String> follower=new HashMap<String,String>();
@@ -150,7 +179,9 @@ public class Device {
 	}
 	
 	/**
-	 * getter für Datum an index i
+	 * Get data value at given index.
+	 * @param i index of the data.
+	 * @return String with the data value.
 	 */
 	public String getData(int i) {
 		String total = String.valueOf(data.get(i).get(0));
@@ -158,14 +189,20 @@ public class Device {
 	}
 	
 	/**
-	 * auflisten wer zugriff hat
+	 * List all service that have access to a given data index.
+	 * @param i index of the data.
+	 * @return ArrayList with services.
 	 */
 	protected ArrayList<String> listAccess(int i){
 		return (ArrayList<String>) data.get(i).get(1);
 	}
 	
 	/**
-	 * publishen
+	 * Publish a data change to the local exchange, if there are active subscribers.
+	 * @param id index of the data.
+	 * @param data data value.
+	 * @param subscriber list of subscribers.
+	 * @throws IOException
 	 */
 	protected void publish(String id, String data, ArrayList<String> subscriber) throws IOException{
 		for (String one : subscriber){ 
@@ -175,64 +212,10 @@ public class Device {
 					.messageId(java.util.UUID.randomUUID().toString())
 					.build();
 			fullMessage.put("sender", name+"@"+server.SERVER_NAME);
-//			fullMessage.put("receiver", to);
-//			fullMessage.put("type", type);
 			fullMessage.put("message", name+"#"+id+"@"+server.SERVER_NAME+":"+data);
-//			fullMessage.put("params", params);
 			server.channel.basicPublish("localExchange", split[0]+"."+split[1], properties, SerializationUtils.serialize(fullMessage));
 						
 		}
 	}
-	
-//	public Device(String name, String id, int[] data){
-//		this.name=name;
-//		this.id=id;
-//		this.dataalt=data;
-	/*	this.data2=data2;
-		this.data3=data3; */
-//	}
-	
-	
-	
-//	public String getName(){
-//		return name;
-//	}
-//	
-//	String get(String filter){
-//		if (filter.equals("name")) return this.name;
-//		if (filter.equals("id")) return this.id;
-//	//	if (filter.equals("data")) return this.data;
-//		else return "";
-//	}
-	
-//	void set(String filter, String wert){
-//		
-//		if (filter.equals("data1")) this.data=wert;
-//	}
-	
-
-//	}
-	
-//	public HashMap<Integer,Integer> getData(int[] index){
-//		HashMap<Integer,Integer> datas = new HashMap<Integer,Integer>();
-//		for(int i: index){ datas.put(i, data[i]);}
-//		return datas;
-//		
-//	}
-//	
-//	public HashMap getFilterData(String args[]){
-//		HashMap help = new HashMap();
-//		for (String help2 : args){
-//			help.put(help2, this.get(help2));}
-//		return help;
-//		}
-//	
-//	public void updateData(){
-//		for(int i=0; i<5; i++){
-//			data[i]++;}
-//					
-//	}
-
-	
 	
 }
