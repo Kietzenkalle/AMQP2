@@ -1,4 +1,4 @@
-package AMQP;
+package AMQP2;
 
 /**
  * This class sets up an owner of a device.
